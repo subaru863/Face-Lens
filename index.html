@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Face Analyzer</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+
+    <div class="app">
+
+        <header>
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    FA
+                </div>
+
+                <div>
+                    <h2>Face Analyzer</h2>
+                    <span>AI Vision System</span>
+                </div>
+
+            </div>
+
+            <div class="status">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+
+        </header>
+
+
+        <main>
+
+            <section class="hero">
+
+                <div class="badge">
+                    <span></span>
+                    AI-POWERED ANALYSIS
+                </div>
+
+                <h1>
+                    Understand the
+                    <span>face in front of you.</span>
+                </h1>
+
+                <p>
+                    Real-time facial analysis powered by computer vision.
+                    Scan for a few seconds to generate a stable result.
+                </p>
+
+            </section>
+
+
+            <section class="camera-section">
+
+                <div class="camera-header">
+
+                    <div>
+                        <span class="small-label">CAMERA INPUT</span>
+                        <h3>Live Analysis</h3>
+                    </div>
+
+                    <div id="scanStatus" class="scan-status">
+                        READY
+                    </div>
+
+                </div>
+
+
+                <div class="camera-box">
+
+                    <video id="camera" autoplay playsinline></video>
+
+                    <div class="corner top-left"></div>
+                    <div class="corner top-right"></div>
+                    <div class="corner bottom-left"></div>
+                    <div class="corner bottom-right"></div>
+
+                    <div id="scanLine" class="scan-line"></div>
+
+                    <div id="cameraMessage" class="camera-message">
+
+                        <div class="camera-icon">
+                            +
+                        </div>
+
+                        <span>Ready to scan</span>
+
+                    </div>
+
+                </div>
+
+
+                <button id="startCamera">
+
+                    <span class="button-icon">◉</span>
+
+                    <span id="buttonText">
+                        Start Scan
+                    </span>
+
+                </button>
+
+            </section>
+
+
+            <section class="results">
+
+                <div class="result-card">
+
+                    <div class="result-top">
+
+                        <span class="result-label">
+                            ESTIMATED AGE
+                        </span>
+
+                        <span class="result-icon">
+                            AGE
+                        </span>
+
+                    </div>
+
+                    <strong id="age">
+                        --
+                    </strong>
+
+                    <span class="result-description">
+                        AI estimation
+                    </span>
+
+                </div>
+
+
+                <div class="result-card expression-card">
+
+                    <div class="result-top">
+
+                        <span class="result-label">
+                            FACIAL EXPRESSION
+                        </span>
+
+                        <span class="result-icon">
+                            AI
+                        </span>
+
+                    </div>
+
+                    <strong id="emotion">
+                        --
+                    </strong>
+
+                    <span class="result-description">
+                        Highest AI expression score
+                    </span>
+
+                    <div id="emotionBreakdown" class="emotion-breakdown"></div>
+
+                </div>
+
+            </section>
+
+
+            <div class="info">
+
+                <div class="info-item">
+                    <span class="info-dot"></span>
+                    Camera processing
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="info-item">
+                    Results are estimates
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="info-item">
+                    Analysis time: ~4 seconds
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <footer>
+
+            <span>FACE ANALYZER</span>
+            <span>Computer Vision Interface</span>
+
+        </footer>
+
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
