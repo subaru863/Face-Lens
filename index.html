@@ -5,106 +5,167 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Face Analyzer</title>
+    <title>Face Analyzer AI</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <div class="background-glow glow-one"></div>
-    <div class="background-glow glow-two"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
 
     <div class="app">
 
-        <header>
+        <!-- HEADER -->
+
+        <header class="header">
 
             <div class="brand">
 
-                <div class="brand-icon">
+                <div class="brand-logo">
                     FA
                 </div>
 
                 <div>
                     <h2>Face Analyzer</h2>
-                    <span>AI Vision System</span>
+                    <p>AI Vision System</p>
                 </div>
 
             </div>
 
-            <div class="status">
-                <span class="status-dot"></span>
-                SYSTEM ONLINE
+            <div class="online-status">
+                <span></span>
+                ONLINE
             </div>
 
         </header>
 
 
-        <main>
+        <!-- HERO -->
 
-            <section class="hero">
+        <section class="hero">
 
-                <div class="badge">
-                    <span></span>
-                    AI-POWERED ANALYSIS
+            <div class="eyebrow">
+                <span></span>
+                COMPUTER VISION
+            </div>
+
+            <h1>
+                Analyze the face.
+                <span>Understand the expression.</span>
+            </h1>
+
+            <p>
+                AI-powered facial analysis that estimates age,
+                gender and facial expression from your camera.
+            </p>
+
+        </section>
+
+
+        <!-- CAMERA -->
+
+        <section class="camera-section">
+
+            <div class="section-heading">
+
+                <div>
+                    <small>CAMERA INPUT</small>
+                    <h3>Live Face Scanner</h3>
                 </div>
 
-                <h1>
-                    Understand the
-                    <span>face in front of you.</span>
-                </h1>
+                <div id="scanStatus" class="scan-status">
+                    READY
+                </div>
 
-                <p>
-                    Real-time facial analysis powered by computer vision.
-                    Scan for a few seconds to generate a stable result.
-                </p>
-
-            </section>
+            </div>
 
 
-            <section class="camera-section">
+            <div class="camera-wrapper">
 
-                <div class="camera-header">
+                <video
+                    id="camera"
+                    autoplay
+                    playsinline
+                    muted>
+                </video>
 
-                    <div>
-                        <span class="small-label">CAMERA INPUT</span>
-                        <h3>Live Analysis</h3>
+                <!-- Dark overlay -->
+
+                <div class="camera-overlay"></div>
+
+
+                <!-- Scanner corners -->
+
+                <div class="scanner-corner corner-tl"></div>
+                <div class="scanner-corner corner-tr"></div>
+                <div class="scanner-corner corner-bl"></div>
+                <div class="scanner-corner corner-br"></div>
+
+
+                <!-- Scan line -->
+
+                <div id="scanLine" class="scan-line"></div>
+
+
+                <!-- Center message -->
+
+                <div id="cameraMessage" class="camera-message">
+
+                    <div class="camera-symbol">
+                        +
                     </div>
 
-                    <div id="scanStatus" class="scan-status">
-                        READY
-                    </div>
+                    <strong>Camera Ready</strong>
+
+                    <span>
+                        Start a scan to analyze your face
+                    </span>
 
                 </div>
 
 
-                <div class="camera-box">
+                <!-- Countdown -->
 
-                    <video id="camera" autoplay playsinline></video>
-
-                    <div class="corner top-left"></div>
-                    <div class="corner top-right"></div>
-                    <div class="corner bottom-left"></div>
-                    <div class="corner bottom-right"></div>
-
-                    <div id="scanLine" class="scan-line"></div>
-
-                    <div id="cameraMessage" class="camera-message">
-
-                        <div class="camera-icon">
-                            +
-                        </div>
-
-                        <span>Ready to scan</span>
-
-                    </div>
-
+                <div
+                    id="countdown"
+                    class="countdown">
                 </div>
 
 
-                <button id="startCamera">
+                <!-- Camera label -->
 
-                    <span class="button-icon">◉</span>
+                <div class="camera-label">
+                    <span class="camera-live-dot"></span>
+                    LIVE CAMERA
+                </div>
+
+            </div>
+
+
+            <!-- CAMERA CONTROLS -->
+
+            <div class="camera-controls">
+
+                <button
+                    id="flipCamera"
+                    class="secondary-button">
+
+                    <span class="flip-icon">↻</span>
+
+                    Flip Camera
+
+                </button>
+
+
+                <button
+                    id="startCamera"
+                    class="primary-button">
+
+                    <span class="button-circle">
+                        ◉
+                    </span>
 
                     <span id="buttonText">
                         Start Scan
@@ -112,100 +173,207 @@
 
                 </button>
 
-            </section>
+            </div>
+
+        </section>
 
 
-            <section class="results">
+        <!-- RESULTS -->
 
-                <div class="result-card">
+        <section class="results-section">
 
-                    <div class="result-top">
+            <div class="results-heading">
 
-                        <span class="result-label">
-                            ESTIMATED AGE
-                        </span>
+                <div>
+                    <small>ANALYSIS RESULTS</small>
 
-                        <span class="result-icon">
-                            AGE
-                        </span>
-
-                    </div>
-
-                    <strong id="age">
-                        --
-                    </strong>
-
-                    <span class="result-description">
-                        AI estimation
-                    </span>
-
+                    <h3>AI Detection</h3>
                 </div>
 
-
-                <div class="result-card expression-card">
-
-                    <div class="result-top">
-
-                        <span class="result-label">
-                            FACIAL EXPRESSION
-                        </span>
-
-                        <span class="result-icon">
-                            AI
-                        </span>
-
-                    </div>
-
-                    <strong id="emotion">
-                        --
-                    </strong>
-
-                    <span class="result-description">
-                        Highest AI expression score
-                    </span>
-
-                    <div id="emotionBreakdown" class="emotion-breakdown"></div>
-
-                </div>
-
-            </section>
-
-
-            <div class="info">
-
-                <div class="info-item">
-                    <span class="info-dot"></span>
-                    Camera processing
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="info-item">
-                    Results are estimates
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="info-item">
-                    Analysis time: ~4 seconds
+                <div class="estimate-note">
+                    Estimates only
                 </div>
 
             </div>
 
-        </main>
 
+            <div class="result-grid">
+
+
+                <!-- AGE -->
+
+                <div class="result-card">
+
+                    <div class="card-header">
+
+                        <span class="card-label">
+                            ESTIMATED AGE
+                        </span>
+
+                        <div class="card-icon">
+                            AGE
+                        </div>
+
+                    </div>
+
+                    <div class="result-value">
+                        <span id="age">--</span>
+                    </div>
+
+                    <p>
+                        AI age estimation
+                    </p>
+
+                </div>
+
+
+                <!-- GENDER -->
+
+                <div class="result-card">
+
+                    <div class="card-header">
+
+                        <span class="card-label">
+                            ESTIMATED GENDER
+                        </span>
+
+                        <div class="card-icon">
+                            AI
+                        </div>
+
+                    </div>
+
+                    <div class="result-value">
+                        <span id="gender">--</span>
+                    </div>
+
+                    <p id="genderConfidence">
+                        AI gender estimation
+                    </p>
+
+                </div>
+
+
+                <!-- EXPRESSION -->
+
+                <div class="result-card expression-main">
+
+                    <div class="card-header">
+
+                        <span class="card-label">
+                            FACIAL EXPRESSION
+                        </span>
+
+                        <div class="card-icon">
+                            AI
+                        </div>
+
+                    </div>
+
+                    <div class="result-value">
+                        <span id="emotion">--</span>
+                    </div>
+
+                    <p>
+                        Strongest detected expression
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- EMOTION BREAKDOWN -->
+
+            <div class="emotion-panel">
+
+                <div class="emotion-header">
+
+                    <div>
+                        <small>EXPRESSION ANALYSIS</small>
+                        <h3>Emotion Breakdown</h3>
+                    </div>
+
+                    <span id="emotionSummary">
+                        Waiting for scan
+                    </span>
+
+                </div>
+
+                <div id="emotionBreakdown"
+                    class="emotion-breakdown">
+
+                    <div class="empty-emotions">
+                        Scan a face to see expression scores.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- INFO -->
+
+        <section class="info-bar">
+
+            <div class="info-item">
+
+                <span class="info-icon">
+                    ✓
+                </span>
+
+                Browser-based processing
+
+            </div>
+
+            <div class="info-item">
+
+                <span class="info-icon">
+                    ⏱
+                </span>
+
+                4 second analysis
+
+            </div>
+
+            <div class="info-item">
+
+                <span class="info-icon">
+                    ~
+                </span>
+
+                Results are estimates
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
 
         <footer>
 
-            <span>FACE ANALYZER</span>
-            <span>Computer Vision Interface</span>
+            <span>
+                FACE ANALYZER AI
+            </span>
+
+            <span>
+                Computer Vision Interface
+            </span>
 
         </footer>
 
     </div>
 
 
+    <!-- FACE API -->
+
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+
+    <!-- YOUR JAVASCRIPT -->
+
     <script src="script.js"></script>
 
 </body>
