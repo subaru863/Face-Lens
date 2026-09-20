@@ -1,381 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Face Analyzer AI</title>
+    <title>FaceLens</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
 </head>
 
 <body>
 
-    <div class="bg-orb orb-1"></div>
-    <div class="bg-orb orb-2"></div>
-
-    <div class="app">
-
-        <!-- HEADER -->
-
-        <header class="header">
-
-            <div class="brand">
-
-                <div class="brand-logo">
-                    FA
-                </div>
-
-                <div>
-                    <h2>Face Analyzer</h2>
-                    <p>AI Vision System</p>
-                </div>
-
+    <!-- HOME -->
+    <section id="home" class="page">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">F</div>
+                <span>FaceLens</span>
             </div>
-
-            <div class="online-status">
-                <span></span>
-                ONLINE
-            </div>
-
         </header>
 
+        <main class="home-content">
+            <div class="hero-icon">◉</div>
 
-        <!-- HERO -->
+            <h1>FaceLens</h1>
 
-        <section class="hero">
-
-            <div class="eyebrow">
-                <span></span>
-                COMPUTER VISION
-            </div>
-
-            <h1>
-                Analyze the face.
-                <span>Understand the expression.</span>
-            </h1>
-
-            <p>
-                AI-powered facial analysis that estimates age,
-                gender and facial expression from your camera.
+            <p class="subtitle">
+                AI-powered face analysis
             </p>
 
-        </section>
+            <button id="startBtn" class="primary-btn">
+                Start Scan
+            </button>
+
+            <p class="small-text">
+                Camera access is required
+            </p>
+        </main>
+    </section>
 
 
-        <!-- CAMERA -->
+    <!-- CAMERA -->
+    <section id="cameraPage" class="camera-page hidden">
 
-        <section class="camera-section">
+        <div class="camera-container">
 
-            <div class="section-heading">
+            <video id="video" autoplay muted playsinline></video>
 
-                <div>
-                    <small>CAMERA INPUT</small>
-                    <h3>Live Face Scanner</h3>
+            <!-- Face detection box -->
+            <div id="faceBox"></div>
+
+            <div id="countdown" class="countdown"></div>
+
+            <div id="scanStatus" class="scan-status">
+                Preparing camera...
+            </div>
+
+        </div>
+
+        <div class="camera-controls">
+
+            <button id="flipBtn" class="control-btn">
+                🔄 Flip
+            </button>
+
+            <button id="closeBtn" class="control-btn close-btn">
+                ✕ Close
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- RESULTS -->
+    <section id="resultPage" class="page hidden">
+
+        <header>
+            <div class="logo">
+                <div class="logo-icon">F</div>
+                <span>FaceLens</span>
+            </div>
+        </header>
+
+        <main class="result-content">
+
+            <h1>Analysis Complete</h1>
+
+            <p class="subtitle">
+                Your face analysis result
+            </p>
+
+            <div class="results-card">
+
+                <div class="result-item">
+                    <span class="result-label">Age</span>
+                    <span id="ageResult" class="result-value">--</span>
                 </div>
 
-                <div id="scanStatus" class="scan-status">
-                    READY
+                <div class="result-item">
+                    <span class="result-label">Gender</span>
+                    <span id="genderResult" class="result-value">--</span>
+                </div>
+
+                <div class="result-item">
+                    <span class="result-label">Expression</span>
+                    <span id="expressionResult" class="result-value">--</span>
                 </div>
 
             </div>
 
+            <button id="againBtn" class="primary-btn">
+                Scan Again
+            </button>
 
-            <div class="camera-wrapper">
+        </main>
 
-                <video
-                    id="camera"
-                    autoplay
-                    playsinline
-                    muted>
-                </video>
+    </section>
 
-                <!-- Dark overlay -->
-
-                <div class="camera-overlay"></div>
-
-
-                <!-- Scanner corners -->
-
-                <div class="scanner-corner corner-tl"></div>
-                <div class="scanner-corner corner-tr"></div>
-                <div class="scanner-corner corner-bl"></div>
-                <div class="scanner-corner corner-br"></div>
-
-
-                <!-- Scan line -->
-
-                <div id="scanLine" class="scan-line"></div>
-
-
-                <!-- Center message -->
-
-                <div id="cameraMessage" class="camera-message">
-
-                    <div class="camera-symbol">
-                        +
-                    </div>
-
-                    <strong>Camera Ready</strong>
-
-                    <span>
-                        Start a scan to analyze your face
-                    </span>
-
-                </div>
-
-
-                <!-- Countdown -->
-
-                <div
-                    id="countdown"
-                    class="countdown">
-                </div>
-
-
-                <!-- Camera label -->
-
-                <div class="camera-label">
-                    <span class="camera-live-dot"></span>
-                    LIVE CAMERA
-                </div>
-
-            </div>
-
-
-            <!-- CAMERA CONTROLS -->
-
-            <div class="camera-controls">
-
-                <button
-                    id="flipCamera"
-                    class="secondary-button">
-
-                    <span class="flip-icon">↻</span>
-
-                    Flip Camera
-
-                </button>
-
-
-                <button
-                    id="startCamera"
-                    class="primary-button">
-
-                    <span class="button-circle">
-                        ◉
-                    </span>
-
-                    <span id="buttonText">
-                        Start Scan
-                    </span>
-
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <!-- RESULTS -->
-
-        <section class="results-section">
-
-            <div class="results-heading">
-
-                <div>
-                    <small>ANALYSIS RESULTS</small>
-
-                    <h3>AI Detection</h3>
-                </div>
-
-                <div class="estimate-note">
-                    Estimates only
-                </div>
-
-            </div>
-
-
-            <div class="result-grid">
-
-
-                <!-- AGE -->
-
-                <div class="result-card">
-
-                    <div class="card-header">
-
-                        <span class="card-label">
-                            ESTIMATED AGE
-                        </span>
-
-                        <div class="card-icon">
-                            AGE
-                        </div>
-
-                    </div>
-
-                    <div class="result-value">
-                        <span id="age">--</span>
-                    </div>
-
-                    <p>
-                        AI age estimation
-                    </p>
-
-                </div>
-
-
-                <!-- GENDER -->
-
-                <div class="result-card">
-
-                    <div class="card-header">
-
-                        <span class="card-label">
-                            ESTIMATED GENDER
-                        </span>
-
-                        <div class="card-icon">
-                            AI
-                        </div>
-
-                    </div>
-
-                    <div class="result-value">
-                        <span id="gender">--</span>
-                    </div>
-
-                    <p id="genderConfidence">
-                        AI gender estimation
-                    </p>
-
-                </div>
-
-
-                <!-- EXPRESSION -->
-
-                <div class="result-card expression-main">
-
-                    <div class="card-header">
-
-                        <span class="card-label">
-                            FACIAL EXPRESSION
-                        </span>
-
-                        <div class="card-icon">
-                            AI
-                        </div>
-
-                    </div>
-
-                    <div class="result-value">
-                        <span id="emotion">--</span>
-                    </div>
-
-                    <p>
-                        Strongest detected expression
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <!-- EMOTION BREAKDOWN -->
-
-            <div class="emotion-panel">
-
-                <div class="emotion-header">
-
-                    <div>
-                        <small>EXPRESSION ANALYSIS</small>
-                        <h3>Emotion Breakdown</h3>
-                    </div>
-
-                    <span id="emotionSummary">
-                        Waiting for scan
-                    </span>
-
-                </div>
-
-                <div id="emotionBreakdown"
-                    class="emotion-breakdown">
-
-                    <div class="empty-emotions">
-                        Scan a face to see expression scores.
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- INFO -->
-
-        <section class="info-bar">
-
-            <div class="info-item">
-
-                <span class="info-icon">
-                    ✓
-                </span>
-
-                Browser-based processing
-
-            </div>
-
-            <div class="info-item">
-
-                <span class="info-icon">
-                    ⏱
-                </span>
-
-                4 second analysis
-
-            </div>
-
-            <div class="info-item">
-
-                <span class="info-icon">
-                    ~
-                </span>
-
-                Results are estimates
-
-            </div>
-
-        </section>
-
-
-        <!-- FOOTER -->
-
-        <footer>
-
-            <span>
-                FACE ANALYZER AI
-            </span>
-
-            <span>
-                Computer Vision Interface
-            </span>
-
-        </footer>
-
-    </div>
-
-
-    <!-- FACE API -->
-
-    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
-
-    <!-- YOUR JAVASCRIPT -->
 
     <script src="script.js"></script>
 
 </body>
-
 </html>

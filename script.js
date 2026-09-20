@@ -1,914 +1,465 @@
-const camera =
-    document.getElementById("camera");
+const home = document.getElementById("home");
+const cameraPage = document.getElementById("cameraPage");
+const resultPage = document.getElementById("resultPage");
 
-const startButton =
-    document.getElementById("startCamera");
+const startBtn = document.getElementById("startBtn");
+const closeBtn = document.getElementById("closeBtn");
+const flipBtn = document.getElementById("flipBtn");
+const againBtn = document.getElementById("againBtn");
 
-const flipButton =
-    document.getElementById("flipCamera");
+const video = document.getElementById("video");
+const faceBox = document.getElementById("faceBox");
 
-const buttonText =
-    document.getElementById("buttonText");
+const countdown = document.getElementById("countdown");
+const scanStatus = document.getElementById("scanStatus");
 
-const ageDisplay =
-    document.getElementById("age");
-
-const genderDisplay =
-    document.getElementById("gender");
-
-const genderConfidence =
-    document.getElementById("genderConfidence");
-
-const emotionDisplay =
-    document.getElementById("emotion");
-
-const emotionBreakdown =
-    document.getElementById("emotionBreakdown");
-
-const emotionSummary =
-    document.getElementById("emotionSummary");
-
-const scanStatus =
-    document.getElementById("scanStatus");
-
-const cameraMessage =
-    document.getElementById("cameraMessage");
-
-const cameraWrapper =
-    document.querySelector(".camera-wrapper");
-
-const countdown =
-    document.getElementById("countdown");
+const ageResult = document.getElementById("ageResult");
+const genderResult = document.getElementById("genderResult");
+const expressionResult = document.getElementById("expressionResult");
 
 
-let modelsLoaded = false;
+let stream = null;
+
+let facingMode = "user";
 
 let scanning = false;
 
-let currentStream = null;
 
-let usingFrontCamera = true;
+/* -----------------------------
+   LOAD AI MODELS
+----------------------------- */
 
+async function loadModels() {
 
-// ========================================
-// LOAD AI MODELS
-// ========================================
+    scanStatus.textContent = "Loading AI...";
 
-async function loadAI() {
+    const MODEL_URL =
+        "https://raw.githubusercontent.com/vladmandic/face-api/master/model";
 
-    if (modelsLoaded) {
-        return;
-    }
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 
-    scanStatus.textContent =
-        "LOADING AI";
+    await faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL);
 
-    const modelURL =
-        "https://raw.githubusercontent.com/vladmandic/face-api/master/model/";
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
 
-
-    await faceapi.nets.tinyFaceDetector.loadFromUri(
-        modelURL
-    );
-
-
-    await faceapi.nets.ageGenderNet.loadFromUri(
-        modelURL
-    );
-
-
-    await faceapi.nets.faceExpressionNet.loadFromUri(
-        modelURL
-    );
-
-
-    modelsLoaded = true;
-
-    console.log("AI models loaded.");
+    console.log("AI models loaded");
 }
 
 
-// ========================================
-// START CAMERA
-// ========================================
+/* -----------------------------
+   START CAMERA
+----------------------------- */
 
 async function startCamera() {
 
     try {
 
-        if (currentStream) {
-
-            currentStream
-                .getTracks()
-                .forEach(track =>
-                    track.stop()
-                );
+        if (stream) {
+            stopCamera();
         }
 
-
-        const facingMode =
-            usingFrontCamera
-                ? "user"
-                : "environment";
-
-
-        currentStream =
-            await navigator.mediaDevices.getUserMedia({
-
-                video: {
-
-                    facingMode: facingMode,
-
-                    width: {
-                        ideal: 1280
-                    },
-
-                    height: {
-                        ideal: 720
-                    }
-
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: facingMode,
+                width: {
+                    ideal: 1280
                 },
-
-                audio: false
-
-            });
-
-
-        camera.srcObject =
-            currentStream;
-
-
-        await new Promise(resolve => {
-
-            if (camera.readyState >= 1) {
-
-                resolve();
-
-            } else {
-
-                camera.onloadedmetadata =
-                    resolve;
-            }
-
+                height: {
+                    ideal: 720
+                }
+            },
+            audio: false
         });
 
+        video.srcObject = stream;
 
-        // Mirror front camera only
+        await video.play();
 
-        if (usingFrontCamera) {
+        scanStatus.textContent = "Camera ready";
 
-            camera.style.transform =
-                "scaleX(-1)";
-
-        } else {
-
-            camera.style.transform =
-                "scaleX(1)";
-        }
-
-
-        cameraMessage.style.display =
-            "none";
-
-
-        scanStatus.textContent =
-            "READY";
-
+        return true;
 
     } catch (error) {
 
         console.error(error);
 
         alert(
-            "Camera could not be started. Please allow camera permission."
+            "Camera access failed.\n\n" +
+            "Please allow camera permission and try again."
         );
 
-        scanStatus.textContent =
-            "CAMERA ERROR";
+        return false;
     }
 }
 
 
-// ========================================
-// INITIAL SCAN BUTTON
-// ========================================
+/* -----------------------------
+   STOP CAMERA
+----------------------------- */
 
-startButton.addEventListener(
-    "click",
-    async () => {
+function stopCamera() {
 
-        if (scanning) {
+    if (stream) {
+
+        stream.getTracks().forEach(track => {
+            track.stop();
+        });
+
+        stream = null;
+    }
+
+    video.srcObject = null;
+}
+
+
+/* -----------------------------
+   SHOW CAMERA
+----------------------------- */
+
+async function openCamera() {
+
+    home.classList.add("hidden");
+    resultPage.classList.add("hidden");
+
+    cameraPage.classList.remove("hidden");
+
+    const cameraStarted = await startCamera();
+
+    if (!cameraStarted) {
+
+        cameraPage.classList.add("hidden");
+        home.classList.remove("hidden");
+
+        return;
+    }
+
+    await loadModels();
+
+    startScan();
+}
+
+
+/* -----------------------------
+   SCAN
+----------------------------- */
+
+async function startScan() {
+
+    if (scanning) return;
+
+    scanning = true;
+
+    const ageSamples = [];
+    const genderSamples = {};
+    const expressionSamples = {};
+
+    const scanTime = 4000;
+
+    const startTime = Date.now();
+
+    scanStatus.textContent = "Look at the camera";
+
+    countdown.textContent = "4";
+
+    const interval = setInterval(async () => {
+
+        if (!scanning) {
+            clearInterval(interval);
             return;
         }
 
+        const elapsed = Date.now() - startTime;
+
+        const remaining =
+            Math.ceil((scanTime - elapsed) / 1000);
+
+        countdown.textContent =
+            remaining > 0 ? remaining : "";
 
         try {
 
-            startButton.disabled =
-                true;
+            const detection =
+                await faceapi
+                    .detectSingleFace(
+                        video,
+                        new faceapi.TinyFaceDetectorOptions({
+                            inputSize: 320,
+                            scoreThreshold: 0.5
+                        })
+                    )
+                    .withAgeAndGender()
+                    .withFaceExpressions();
 
+            if (!detection) {
 
-            buttonText.textContent =
-                "Preparing...";
+                faceBox.style.display = "none";
 
+                scanStatus.textContent =
+                    "No face detected";
 
-            if (!currentStream) {
-
-                await startCamera();
-
+                return;
             }
 
 
-            await loadAI();
+            /* -----------------------------
+               FACE BOX
+            ----------------------------- */
+
+            const box = detection.detection.box;
+
+            const scaleX =
+                video.clientWidth / video.videoWidth;
+
+            const scaleY =
+                video.clientHeight / video.videoHeight;
+
+            faceBox.style.display = "block";
+
+            faceBox.style.left =
+                `${box.x * scaleX}px`;
+
+            faceBox.style.top =
+                `${box.y * scaleY}px`;
+
+            faceBox.style.width =
+                `${box.width * scaleX}px`;
+
+            faceBox.style.height =
+                `${box.height * scaleY}px`;
 
 
-            await runCountdown();
+            /* -----------------------------
+               AGE
+            ----------------------------- */
+
+            ageSamples.push(detection.age);
 
 
-            await startScan();
+            /* -----------------------------
+               GENDER
+            ----------------------------- */
 
+            const gender =
+                detection.gender;
+
+            const genderProbability =
+                detection.genderProbability;
+
+            if (!genderSamples[gender]) {
+                genderSamples[gender] = 0;
+            }
+
+            genderSamples[gender] +=
+                genderProbability;
+
+
+            /* -----------------------------
+               EXPRESSIONS
+            ----------------------------- */
+
+            const expressions =
+                detection.expressions;
+
+            for (const expression in expressions) {
+
+                if (!expressionSamples[expression]) {
+                    expressionSamples[expression] = 0;
+                }
+
+                expressionSamples[expression] +=
+                    expressions[expression];
+            }
+
+            scanStatus.textContent =
+                "Analyzing...";
 
         } catch (error) {
 
             console.error(error);
+        }
 
-            alert(
-                "Something went wrong while starting the scan."
+
+        /* -----------------------------
+           FINISH SCAN
+        ----------------------------- */
+
+        if (elapsed >= scanTime) {
+
+            clearInterval(interval);
+
+            finishScan(
+                ageSamples,
+                genderSamples,
+                expressionSamples
             );
-
-        } finally {
-
-            startButton.disabled =
-                false;
-
         }
 
-    }
-);
-
-
-// ========================================
-// FLIP CAMERA
-// ========================================
-
-flipButton.addEventListener(
-    "click",
-    async () => {
-
-        if (scanning) {
-            return;
-        }
-
-
-        usingFrontCamera =
-            !usingFrontCamera;
-
-
-        flipButton.disabled =
-            true;
-
-
-        await startCamera();
-
-
-        flipButton.disabled =
-            false;
-
-    }
-);
-
-
-// ========================================
-// COUNTDOWN
-// ========================================
-
-async function runCountdown() {
-
-    for (
-        let number = 3;
-        number >= 1;
-        number--
-    ) {
-
-        countdown.textContent =
-            number;
-
-
-        countdown.classList.remove(
-            "show"
-        );
-
-
-        // Force animation restart
-
-        void countdown.offsetWidth;
-
-
-        countdown.classList.add(
-            "show"
-        );
-
-
-        await sleep(800);
-    }
-
-
-    countdown.textContent =
-        "SCAN";
-
-
-    countdown.classList.remove(
-        "show"
-    );
-
-
-    void countdown.offsetWidth;
-
-
-    countdown.classList.add(
-        "show"
-    );
-
-
-    await sleep(500);
-
+    }, 150);
 }
 
 
-// ========================================
-// 4 SECOND FACE SCAN
-// ========================================
-
-async function startScan() {
-
-    if (scanning) {
-        return;
-    }
-
-
-    scanning = true;
-
-
-    buttonText.textContent =
-        "Scanning Face...";
-
-
-    scanStatus.textContent =
-        "SCANNING";
-
-
-    cameraWrapper.classList.add(
-        "scanning"
-    );
-
-
-    ageDisplay.textContent =
-        "Analyzing...";
-
-
-    genderDisplay.textContent =
-        "Analyzing...";
-
-
-    genderConfidence.textContent =
-        "Processing AI estimate";
-
-
-    emotionDisplay.textContent =
-        "Analyzing...";
-
-
-    emotionSummary.textContent =
-        "Analyzing expressions";
-
-
-    emotionBreakdown.innerHTML =
-        "";
-
-
-    // --------------------------------
-    // STORAGE
-    // --------------------------------
-
-    const ages = [];
-
-    const genders = [];
-
-    const genderProbabilities = [];
-
-
-    const emotionScores = {
-
-        happy: [],
-
-        sad: [],
-
-        angry: [],
-
-        fearful: [],
-
-        disgusted: [],
-
-        surprised: [],
-
-        neutral: []
-
-    };
-
-
-    const scanTime =
-        4000;
-
-
-    const startTime =
-        Date.now();
-
-
-    // --------------------------------
-    // SCANNING LOOP
-    // --------------------------------
-
-    while (
-        Date.now() - startTime
-        < scanTime
-    ) {
-
-        try {
-
-            const result =
-                await faceapi
-
-                    .detectSingleFace(
-                        camera,
-                        new faceapi.TinyFaceDetectorOptions({
-                            inputSize: 416,
-                            scoreThreshold: 0.5
-                        })
-                    )
-
-                    .withAgeAndGender()
-
-                    .withFaceExpressions();
-
-
-            if (result) {
-
-                // AGE
-
-                ages.push(
-                    result.age
-                );
-
-
-                // GENDER
-
-                genders.push(
-                    result.gender
-                );
-
-
-                genderProbabilities.push(
-                    result.genderProbability
-                );
-
-
-                // EXPRESSIONS
-
-                const expressions =
-                    result.expressions;
-
-
-                for (
-                    const emotion
-                    in emotionScores
-                ) {
-
-                    emotionScores[
-                        emotion
-                    ].push(
-                        expressions[
-                            emotion
-                        ]
-                    );
-
-                }
-
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "Detection error:",
-                error
-            );
-
-        }
-
-
-        await sleep(150);
-    }
-
-
-    // --------------------------------
-    // FINISH
-    // --------------------------------
-
-    cameraWrapper.classList.remove(
-        "scanning"
-    );
-
-
-    // =================================
-    // NO FACE
-    // =================================
-
-    if (ages.length === 0) {
-
-        ageDisplay.textContent =
-            "--";
-
-
-        genderDisplay.textContent =
-            "--";
-
-
-        genderConfidence.textContent =
-            "No face detected";
-
-
-        emotionDisplay.textContent =
-            "No face detected";
-
-
-        emotionSummary.textContent =
-            "No face detected";
-
-
-        emotionBreakdown.innerHTML = `
-
-            <div class="empty-emotions">
-                No face was detected during the scan.
-                Try moving closer and facing the camera.
-            </div>
-
-        `;
-
-
-        scanStatus.textContent =
-            "NO FACE";
-
-        buttonText.textContent =
-            "Try Again";
-
-
-        scanning = false;
-
-        return;
-    }
-
-
-    // =================================
-    // AGE RESULT
-    // =================================
-
-    const averageAge =
-        ages.reduce(
-            (sum, age) =>
-                sum + age,
-            0
-        ) / ages.length;
-
-
-    const finalAge =
-        Math.round(
-            averageAge
-        );
-
-
-    ageDisplay.textContent =
-        finalAge + " years";
-
-
-    // =================================
-    // GENDER RESULT
-    // =================================
-
-    const genderCounts = {
-
-        male: 0,
-
-        female: 0
-
-    };
-
-
-    genders.forEach(
-        gender => {
-
-            if (
-                gender === "male"
-            ) {
-
-                genderCounts.male++;
-
-            } else {
-
-                genderCounts.female++;
-
-            }
-
-        }
-    );
-
-
-    let finalGender =
-        "male";
-
-
-    if (
-        genderCounts.female
-        >
-        genderCounts.male
-    ) {
-
-        finalGender =
-            "female";
-    }
-
-
-    // Average confidence
-
-    const averageGenderConfidence =
-        genderProbabilities.reduce(
-            (sum, value) =>
-                sum + value,
-            0
-        ) /
-        genderProbabilities.length;
-
-
-    const finalGenderConfidence =
-        Math.round(
-            averageGenderConfidence * 100
-        );
-
-
-    genderDisplay.textContent =
-        capitalize(
-            finalGender
-        );
-
-
-    genderConfidence.textContent =
-        finalGenderConfidence +
-        "% model confidence";
-
-
-    // =================================
-    // EMOTION AVERAGES
-    // =================================
-
-    const finalEmotions = {};
-
-
-    for (
-        const emotion
-        in emotionScores
-    ) {
-
-        const values =
-            emotionScores[
-                emotion
-            ];
-
-
-        const average =
-            values.reduce(
-                (sum, value) =>
-                    sum + value,
-                0
-            ) /
-            values.length;
-
-
-        finalEmotions[
-            emotion
-        ] = average;
-
-    }
-
-
-    // =================================
-    // FIND STRONGEST EMOTION
-    // =================================
-
-    let finalEmotion =
-        "neutral";
-
-
-    let highestScore =
-        0;
-
-
-    for (
-        const emotion
-        in finalEmotions
-    ) {
-
-        if (
-            finalEmotions[
-                emotion
-            ] > highestScore
-        ) {
-
-            highestScore =
-                finalEmotions[
-                    emotion
-                ];
-
-
-            finalEmotion =
-                emotion;
-
-        }
-
-    }
-
-
-    const finalEmotionPercentage =
-        Math.round(
-            highestScore * 100
-        );
-
-
-    emotionDisplay.textContent =
-        capitalize(
-            finalEmotion
-        );
-
-
-    emotionSummary.textContent =
-        capitalize(
-            finalEmotion
-        ) +
-        " · " +
-        finalEmotionPercentage +
-        "%";
-
-
-    // =================================
-    // DISPLAY EMOTIONS
-    // =================================
-
-    displayEmotionBreakdown(
-        finalEmotions,
-        finalEmotion
-    );
-
-
-    scanStatus.textContent =
-        "ANALYSIS COMPLETE";
-
-
-    buttonText.textContent =
-        "Scan Again";
-
+/* -----------------------------
+   FINISH RESULT
+----------------------------- */
+
+function finishScan(
+    ageSamples,
+    genderSamples,
+    expressionSamples
+) {
 
     scanning = false;
 
-}
+    stopCamera();
+
+    faceBox.style.display = "none";
+
+    countdown.textContent = "";
+
+    /* AGE */
+
+    let age = 0;
+
+    if (ageSamples.length > 0) {
+
+        age =
+            ageSamples.reduce(
+                (sum, value) => sum + value,
+                0
+            ) / ageSamples.length;
+    }
+
+    age = Math.round(age);
 
 
-// ========================================
-// DISPLAY EMOTION BARS
-// ========================================
+    /* GENDER */
 
-function displayEmotionBreakdown(
-    emotions,
-    winningEmotion
-) {
+    let gender = "Unknown";
 
-    emotionBreakdown.innerHTML =
-        "";
+    const genders =
+        Object.keys(genderSamples);
 
+    if (genders.length > 0) {
 
-    const sorted =
-        Object.entries(
-            emotions
-        ).sort(
-            (a, b) =>
-                b[1] - a[1]
-        );
-
-
-    sorted.forEach(
-        ([emotion, score]) => {
-
-            const percentage =
-                Math.round(
-                    score * 100
-                );
-
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "emotion-row";
-
-
-            if (
-                emotion ===
-                winningEmotion
-            ) {
-
-                row.classList.add(
-                    "winner"
-                );
-
-            }
-
-
-            const finalBadge =
-                emotion ===
-                winningEmotion
-                    ? `<span class="final-badge">FINAL</span>`
-                    : "";
-
-
-            row.innerHTML = `
-
-                <span class="emotion-name">
-
-                    ${capitalize(
-                        emotion
-                    )}
-
-                    ${finalBadge}
-
-                </span>
-
-
-                <div class="emotion-bar">
-
-                    <div
-                        class="emotion-fill"
-                        style="width: ${percentage}%">
-                    </div>
-
-                </div>
-
-
-                <span class="emotion-percent">
-
-                    ${percentage}%
-
-                </span>
-
-            `;
-
-
-            emotionBreakdown.appendChild(
-                row
+        gender =
+            genders.reduce((a, b) =>
+                genderSamples[a] >
+                genderSamples[b]
+                    ? a
+                    : b
             );
+    }
 
-        }
-    );
+    if (gender === "male") {
+        gender = "Male";
+    }
 
+    if (gender === "female") {
+        gender = "Female";
+    }
+
+
+    /* EXPRESSION */
+
+    let expression = "Neutral";
+
+    const expressions =
+        Object.keys(expressionSamples);
+
+    if (expressions.length > 0) {
+
+        expression =
+            expressions.reduce((a, b) =>
+                expressionSamples[a] >
+                expressionSamples[b]
+                    ? a
+                    : b
+            );
+    }
+
+    expression =
+        expression.charAt(0).toUpperCase() +
+        expression.slice(1);
+
+
+    /* SHOW RESULTS */
+
+    ageResult.textContent =
+        age > 0 ? `${age} years` : "Unknown";
+
+    genderResult.textContent =
+        gender;
+
+    expressionResult.textContent =
+        expression;
+
+    cameraPage.classList.add("hidden");
+
+    resultPage.classList.remove("hidden");
 }
 
 
-// ========================================
-// SLEEP
-// ========================================
+/* -----------------------------
+   FLIP CAMERA
+----------------------------- */
 
-function sleep(milliseconds) {
+async function flipCamera() {
 
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                milliseconds
-            )
-    );
+    facingMode =
+        facingMode === "user"
+            ? "environment"
+            : "user";
 
+    await startCamera();
 }
 
 
-// ========================================
-// CAPITALIZE
-// ========================================
+/* -----------------------------
+   BUTTON EVENTS
+----------------------------- */
 
-function capitalize(text) {
+startBtn.addEventListener(
+    "click",
+    openCamera
+);
 
-    return text
-        .charAt(0)
-        .toUpperCase()
-        +
-        text.slice(1);
 
-}
+againBtn.addEventListener(
+    "click",
+    openCamera
+);
+
+
+flipBtn.addEventListener(
+    "click",
+    flipCamera
+);
+
+
+closeBtn.addEventListener(
+    "click",
+    () => {
+
+        scanning = false;
+
+        stopCamera();
+
+        cameraPage.classList.add("hidden");
+
+        home.classList.remove("hidden");
+
+        faceBox.style.display = "none";
+
+        countdown.textContent = "";
+    }
+);
+
+
+/* -----------------------------
+   PAGE CLOSE
+----------------------------- */
+
+window.addEventListener(
+    "beforeunload",
+    stopCamera
+);
